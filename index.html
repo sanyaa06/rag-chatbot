@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archive — Knowledge Base Assistant</title>
+<style>
+  :root {
+    --ink: #1c1a17;
+    --paper: #f6f2e9;
+    --paper-dim: #ece5d4;
+    --rule: #d8cfb8;
+    --brass: #9c7a3c;
+    --brass-dim: #c9ad76;
+    --error: #a3402f;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --serif: 'Georgia', 'Iowan Old Style', serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--mono);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--paper-dim) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-dim) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: -1px -1px;
+  }
+
+  .frame {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  header {
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 34px;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .status-tag {
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-align: right;
+    line-height: 1.6;
+    color: #6b6455;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brass);
+    margin-right: 6px;
+    position: relative;
+    top: -1px;
+  }
+
+  section {
+    margin-bottom: 44px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #6b6455;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  /* Upload zone */
+  .dropzone {
+    border: 1px dashed var(--ink);
+    background: rgba(255,255,255,0.35);
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    position: relative;
+  }
+
+  .dropzone:hover, .dropzone.drag-over {
+    border-color: var(--brass);
+    background: rgba(255,255,255,0.6);
+  }
+
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .dropzone-icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+    color: var(--brass);
+  }
+
+  .dropzone-text {
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+  .dropzone-sub {
+    font-size: 11px;
+    color: #8a8270;
+    margin-top: 6px;
+  }
+
+  .file-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .file-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #fff;
+    border: 1px solid var(--rule);
+    font-size: 12px;
+  }
+
+  .file-row .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 60%;
+  }
+
+  .file-row .meta {
+    color: #8a8270;
+    font-size: 11px;
+  }
+
+  .file-state {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .file-state.pending { background: #eee5cf; color: #7a6633; }
+  .file-state.uploading { background: #e2ecf0; color: #3c6b7a; }
+  .file-state.done { background: #dcead9; color: #2f6b34; }
+  .file-state.error { background: #f0dcd8; color: var(--error); }
+
+  /* Chat */
+  .chat-shell {
+    border: 1px solid var(--ink);
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 460px;
+  }
+
+  .chat-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .msg {
+    max-width: 78%;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .msg .role {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #8a8270;
+    margin-bottom: 4px;
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    text-align: right;
+  }
+
+  .msg.user .bubble {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 14px;
+    display: inline-block;
+    text-align: left;
+  }
+
+  .msg.assistant .bubble {
+    background: var(--paper-dim);
+    border-left: 2px solid var(--brass);
+    padding: 10px 14px;
+    display: inline-block;
+  }
+
+  .msg.system .bubble {
+    color: #8a8270;
+    font-style: italic;
+    font-size: 12px;
+  }
+
+  .chat-input-row {
+    border-top: 1px solid var(--rule);
+    display: flex;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .chat-input-row input {
+    flex: 1;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+  .chat-input-row input:focus {
+    outline: none;
+    border-color: var(--brass);
+  }
+
+  .send-btn {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 0 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .send-btn:hover { background: var(--brass); }
+  .send-btn:disabled { background: var(--rule); color: #8a8270; cursor: not-allowed; }
+
+  .config-note {
+    font-size: 11px;
+    color: #8a8270;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+
+  .config-note code {
+    background: var(--paper-dim);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rule); }
+
+  @media (max-width: 600px) {
+    header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .status-tag { text-align: left; }
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <header>
+    <div>
+      <p class="eyebrow">Internal tool</p>
+      <h1>Archive</h1>
+    </div>
+    <div class="status-tag">
+      <span class="status-dot"></span>knowledge base assistant<br>
+      indexed via n8n
+    </div>
+  </header>
+
+  <section>
+    <div class="section-label">Add a document</div>
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="application/pdf" multiple>
+      <div class="dropzone-icon">&#8593;</div>
+      <div class="dropzone-text">Drop a PDF here, or click to browse</div>
+      <div class="dropzone-sub">Files are added to the shared knowledge base and indexed automatically</div>
+    </div>
+    <div class="file-list" id="fileList"></div>
+    <p class="config-note">Uploads post to the webhook set in <code>UPLOAD_WEBHOOK_URL</code> below.</p>
+  </section>
+
+  <section>
+    <div class="section-label">Ask the archive</div>
+    <div class="chat-shell">
+      <div class="chat-log" id="chatLog">
+        <div class="msg system">
+          <div class="bubble">Ask a question about anything in the knowledge base.</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Ask about a policy, a clause, a procedure…" autocomplete="off">
+        <button class="send-btn" id="sendBtn">Send</button>
+      </div>
+    </div>
+    <p class="config-note">Chat calls the webhook set in <code>CHAT_WEBHOOK_URL</code> below.</p>
+  </section>
+
+</div>
+
+<script>
+  // ---- Configuration: paste your n8n Webhook Production URLs here ----
+  const UPLOAD_WEBHOOK_URL = "https://sansaidwhattt.app.n8n.cloud/webhook/chat-path";
+  const CHAT_WEBHOOK_URL   = "https://sansaidwhattt.app.n8n.cloud/webhook/upload-pdf";
+  // ----------------------------------------------------------------------
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const fileList = document.getElementById('fileList');
+  const chatLog = document.getElementById('chatLog');
+  const chatInput = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  // ---- Upload handling ----
+  fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+  ['dragover', 'dragenter'].forEach(evt =>
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('drag-over');
+    })
+  );
+  ['dragleave', 'drop'].forEach(evt =>
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('drag-over');
+    })
+  );
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  });
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function handleFiles(files) {
+    [...files].forEach(file => {
+      if (file.type !== 'application/pdf') {
+        addFileRow(file.name, formatSize(file.size), 'error', 'Not a PDF');
+        return;
+      }
+      const row = addFileRow(file.name, formatSize(file.size), 'pending', 'Queued');
+      uploadFile(file, row);
+    });
+  }
+
+  function addFileRow(name, meta, state, label) {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+    row.innerHTML = `
+      <span class="name">${name}</span>
+      <span class="meta">${meta}</span>
+      <span class="file-state ${state}">${label}</span>
+    `;
+    fileList.prepend(row);
+    return row;
+  }
+
+  function setRowState(row, state, label) {
+    const tag = row.querySelector('.file-state');
+    tag.className = 'file-state ' + state;
+    tag.textContent = label;
+  }
+
+  async function uploadFile(file, row) {
+    setRowState(row, 'uploading', 'Uploading');
+
+    if (UPLOAD_WEBHOOK_URL.includes('YOUR-N8N-DOMAIN')) {
+      setRowState(row, 'error', 'Webhook not set');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('data', file, file.name);
+
+    try {
+      const res = await fetch(UPLOAD_WEBHOOK_URL, {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) throw new Error('Upload failed: ' + res.status);
+      setRowState(row, 'done', 'Indexed');
+    } catch (err) {
+      console.error(err);
+      setRowState(row, 'error', 'Failed');
+    }
+  }
+
+  // ---- Chat handling ----
+  function addMessage(role, text) {
+    const msg = document.createElement('div');
+    msg.className = 'msg ' + role;
+    const roleLabel = role === 'user' ? 'You' : role === 'assistant' ? 'Archive' : '';
+    msg.innerHTML = `
+      ${roleLabel ? `<div class="role">${roleLabel}</div>` : ''}
+      <div class="bubble">${text}</div>
+    `;
+    chatLog.appendChild(msg);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return msg;
+  }
+
+  async function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    if (CHAT_WEBHOOK_URL.includes('YOUR-N8N-DOMAIN')) {
+      addMessage('system', 'Chat webhook not configured yet — set CHAT_WEBHOOK_URL in the script.');
+      return;
+    }
+
+    addMessage('user', escapeHtml(text));
+    chatInput.value = '';
+    sendBtn.disabled = true;
+
+    const thinkingMsg = addMessage('assistant', '…');
+
+    try {
+      const res = await fetch(CHAT_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      const reply = data.reply || data.answer || data.text || 'No response field found in webhook output.';
+      thinkingMsg.querySelector('.bubble').textContent = reply;
+    } catch (err) {
+      console.error(err);
+      thinkingMsg.querySelector('.bubble').textContent = 'Something went wrong reaching the assistant.';
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+</script>
+
+</body>
+</html>

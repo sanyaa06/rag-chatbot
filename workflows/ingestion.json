@@ -1,0 +1,292 @@
+{
+  "name": "RAG-pt-2",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "14YdCiozrwJlLqVB6HiUyLGYulH8nVQ-X",
+          "mode": "list",
+          "cachedResultName": "Knowledge Base",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/14YdCiozrwJlLqVB6HiUyLGYulH8nVQ-X"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        -96
+      ],
+      "id": "3f1a2412-e154-49c8-a869-0219e91e7db6",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "zd4yy0eLX6fAs2hW",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -928,
+        -96
+      ],
+      "id": "c325419d-f757-4faa-8455-5eb95d1f3d35",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "zd4yy0eLX6fAs2hW",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.body;\n\nconst chunkSize = 1000;\nconst overlap = 200;\n\nconst chunks = [];\n\nfor (let i = 0; i < text.length; i += chunkSize - overlap) {\n  chunks.push({\n    json: {\n      text: text.substring(i, i + chunkSize)\n    }\n  });\n}\n\nreturn chunks;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        -112
+      ],
+      "id": "d0c2ab68-ea4a-4b9d-adbf-e380e18d5652",
+      "name": "split into chunks"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"models/gemini-embedding-001\",\n  content: {\n    parts: [\n      { text: $('PDFco Api').item.json.body }\n    ]\n  },\n  taskType: \"RETRIEVAL_DOCUMENT\",\n  outputDimensionality: 768\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        64,
+        -96
+      ],
+      "id": "7b9c8133-af29-4be1-b548-5dffc3203ee5",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "Convert from PDF",
+        "url": "= {{ $json.url }}",
+        "advancedOptions": {}
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -96
+      ],
+      "id": "44469905-015b-4b6c-83df-8fc881312d8a",
+      "name": "PDFco Api",
+      "credentials": {
+        "pdfcoApi": {
+          "id": "MtEXkkburMzOX9RG",
+          "name": "PDF.co account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "Upload File to PDF.co",
+        "binaryData": true,
+        "name": "={{ $('Google Drive Trigger').item.json.name }}"
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -96
+      ],
+      "id": "2f835b89-7a91-4e93-abcd-d194c816cf9b",
+      "name": "PDFco Api1",
+      "credentials": {
+        "pdfcoApi": {
+          "id": "MtEXkkburMzOX9RG",
+          "name": "PDF.co account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://7703a25f-16ee-48b2-8f91-84a976b89278.eu-west-2-0.aws.cloud.qdrant.io/collections/knowledge_base/points",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"points\": [\n    {\n      \"id\": 1,\n      \"vector\": $json.embedding.values,\n      \"payload\": {\n        \"text\": $('PDFco Api').first().json.body\n      }\n    }\n  ]\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        272,
+        -96
+      ],
+      "id": "9bd8140b-f54f-4bbe-9369-89b8f9c27272",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1Aa3Sc9hWp48Ul76",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://7703a25f-16ee-48b2-8f91-84a976b89278.eu-west-2-0.aws.cloud.qdrant.io/collections/knowledge_base",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIiwic3ViamVjdCI6ImFwaS1rZXk6Mzc2Y2IyMTUtNTQxZC00Nzk4LWE5ODQtZGE0YzJkZWQ4MjA2In0.UbxhMe0pHkKcNxRGMqkRqymY2UAR89T5QD3oM_jOs8M"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"vectors\": {\n    \"size\": 768,\n    \"distance\": \"Cosine\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -912,
+        112
+      ],
+      "id": "e10d4b15-082e-4d27-80c7-0b20d6b33b40",
+      "name": "HTTP Request2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "PDFco Api1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split into chunks": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco Api": {
+      "main": [
+        [
+          {
+            "node": "split into chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco Api1": {
+      "main": [
+        [
+          {
+            "node": "PDFco Api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6f2eca51-6f78-43b8-9949-c85c6169e9de",
+  "meta": {
+    "instanceId": "6e4d4a70212d7b7ab6369367bab99633fb9645e9d4070edee05a48c34370ae23"
+  },
+  "nodeGroups": [],
+  "id": "fHKhxvAa03Cmmq1c",
+  "tags": []
+}

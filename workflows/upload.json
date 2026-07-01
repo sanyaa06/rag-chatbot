@@ -1,0 +1,79 @@
+{
+  "name": "RAG-pt-3",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -48,
+        -32
+      ],
+      "id": "7c02d2b8-341b-4c2d-b266-48b9b09d1c5d",
+      "name": "Webhook",
+      "webhookId": "eb2f3910-15a0-406d-922e-e8dc64c577e4"
+    },
+    {
+      "parameters": {
+        "name": "={{ $binary.data.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "14YdCiozrwJlLqVB6HiUyLGYulH8nVQ-X",
+          "mode": "list",
+          "cachedResultName": "Knowledge Base",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/14YdCiozrwJlLqVB6HiUyLGYulH8nVQ-X"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        160,
+        -32
+      ],
+      "id": "da74484d-1c5a-4894-b6db-82509aef14df",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "zd4yy0eLX6fAs2hW",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c8496bac-ddea-44ec-b10e-53d68fd8644a",
+  "meta": {
+    "instanceId": "6e4d4a70212d7b7ab6369367bab99633fb9645e9d4070edee05a48c34370ae23"
+  },
+  "nodeGroups": [],
+  "id": "P3PNDliNbxYV9wjL",
+  "tags": []
+}

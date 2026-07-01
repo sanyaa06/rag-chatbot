@@ -1,0 +1,249 @@
+{
+  "name": "RAG-pt-1",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-path",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        -112
+      ],
+      "id": "8e7f15f0-6a66-46d2-a3e3-890cf51fdb9e",
+      "name": "Webhook1",
+      "webhookId": "05d32954-d60a-4c75-8414-914e87eb6532"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.all()[0].json.result;\n\nconst context = results\n  .map(r => r.payload.text)\n  .join('\\n\\n---\\n\\n');\n\nreturn [{\n  json: {\n    context,\n    question: $('Webhook1').item.json.body.message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -112
+      ],
+      "id": "479f3fad-fd27-49d2-bb2a-5be96cf14a1e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  contents: [{\n    parts: [{\n      text: `Answer the question using only the context below. If the answer isn't in the context, say you don't know.\\n\\nContext:\\n${$json.context}\\n\\nQuestion: ${$json.question}`\n    }]\n  }],\n  generationConfig: {\n    temperature: 0.2,\n    maxOutputTokens: 1024\n  }\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        592,
+        -112
+      ],
+      "id": "516ff6cd-a9aa-43df-9c68-e349b8b8dbe9",
+      "name": "HTTP Request5",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"reply\": \"{{ $json.candidates[0].content.parts[0].text }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        800,
+        -112
+      ],
+      "id": "7072b61d-1abd-494b-968c-1364f12462e5",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"models/gemini-embedding-001\",\n  content: { parts: [{ text: $json.body.message }] },\n  taskType: \"RETRIEVAL_QUERY\",\n  outputDimensionality: 768\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -32,
+        -112
+      ],
+      "id": "9af98db4-32c9-4be0-a723-9ab0c5461fdc",
+      "name": "Embeddings"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://7703a25f-16ee-48b2-8f91-84a976b89278.eu-west-2-0.aws.cloud.qdrant.io:6333/collections/knowledge_base/points/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIiwic3ViamVjdCI6ImFwaS1rZXk6Mzc2Y2IyMTUtNTQxZC00Nzk4LWE5ODQtZGE0YzJkZWQ4MjA2In0.UbxhMe0pHkKcNxRGMqkRqymY2UAR89T5QD3oM_jOs8M"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  vector: $json.embedding.values,\n  limit: 5,\n  with_payload: true\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        -112
+      ],
+      "id": "cde05fc9-39ad-422a-a2ed-2ad2b23c43f0",
+      "name": "Qdrant Search",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1Aa3Sc9hWp48Ul76",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qdrant Search": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d5d9cbfe-c506-43ce-a2e8-53a8c90c6b70",
+  "meta": {
+    "instanceId": "6e4d4a70212d7b7ab6369367bab99633fb9645e9d4070edee05a48c34370ae23"
+  },
+  "nodeGroups": [],
+  "id": "7JF2aEJimB2RwT0K",
+  "tags": []
+}
