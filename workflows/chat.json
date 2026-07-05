@@ -11,10 +11,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -240,
-        -112
+        -224,
+        256
       ],
-      "id": "8e7f15f0-6a66-46d2-a3e3-890cf51fdb9e",
+      "id": "9ff9247f-2c4d-4641-bae2-ddd05e1f0446",
       "name": "Webhook1",
       "webhookId": "05d32954-d60a-4c75-8414-914e87eb6532"
     },
@@ -25,10 +25,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        384,
-        -112
+        800,
+        176
       ],
-      "id": "479f3fad-fd27-49d2-bb2a-5be96cf14a1e",
+      "id": "a4fdc7f4-c7f4-445f-8eb1-8abb6faff1f9",
       "name": "Code in JavaScript"
     },
     {
@@ -68,26 +68,26 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        592,
-        -112
+        1104,
+        144
       ],
-      "id": "516ff6cd-a9aa-43df-9c68-e349b8b8dbe9",
+      "id": "580cac14-7de0-4e14-a0fe-085b1711a873",
       "name": "HTTP Request5",
       "retryOnFail": true
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"reply\": \"{{ $json.candidates[0].content.parts[0].text }}\"\n}",
+        "responseBody": "={{ JSON.stringify({ reply: $json.candidates[0].content.parts[0].text }) }}",
         "options": {}
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        800,
-        -112
+        1488,
+        160
       ],
-      "id": "7072b61d-1abd-494b-968c-1364f12462e5",
+      "id": "495f2c3b-45a4-45c8-a315-d85737061781",
       "name": "Respond to Webhook"
     },
     {
@@ -127,10 +127,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -32,
-        -112
+        32,
+        272
       ],
-      "id": "9af98db4-32c9-4be0-a723-9ab0c5461fdc",
+      "id": "0838d095-b7d6-457d-adc0-12ffdb51b13d",
       "name": "Embeddings"
     },
     {
@@ -144,7 +144,7 @@
           "parameters": [
             {
               "name": "api-key",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIiwic3ViamVjdCI6ImFwaS1rZXk6Mzc2Y2IyMTUtNTQxZC00Nzk4LWE5ODQtZGE0YzJkZWQ4MjA2In0.UbxhMe0pHkKcNxRGMqkRqymY2UAR89T5QD3oM_jOs8M"
+              "value": "YOUR_GEMINI_API_KEY"
             }
           ]
         },
@@ -163,10 +163,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        176,
-        -112
+        224,
+        288
       ],
-      "id": "cde05fc9-39ad-422a-a2ed-2ad2b23c43f0",
+      "id": "0643d509-7b22-45ab-af24-d0434b47aea1",
       "name": "Qdrant Search",
       "credentials": {
         "httpHeaderAuth": {
@@ -174,6 +174,131 @@
           "name": "Header Auth account"
         }
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2eb8e660-3981-4c6f-b406-1a53d77bbfc1",
+              "leftValue": "={{ $json.result && $json.result.length > 0 ? $json.result[0].score : 0 }}",
+              "rightValue": "=0.75",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        432,
+        288
+      ],
+      "id": "57286d01-5504-41cb-a1a1-86bc9e32eb85",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a voice assistant.\n\nAnswer the user's question using the search results below.\n\nUser question:\n{{ $('Code in JavaScript1').first().json.query }}\n\nSearch results:\n{{ $json.research_context }}\n\nRules:\n- Give only the useful answer.\n- Do not speak URLs.\n- Do not mention website links.\n- Do not say \"according to source 1\".\n- Keep it short and conversational.\n- If there are multiple updates, summarize the top 3."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        576
+      ],
+      "id": "48f142d3-8379-470d-9243-2e53c037d69f",
+      "name": "Message a model1",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KXH2QSwJInt5QArq",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $json.results || [];\n\nlet context = \"\";\n\nfor (let i = 0; i < results.length; i++) {\n  const r = results[i];\n\n  context += `\nSource ${i + 1}\nTitle: ${r.title || \"\"}\nURL: ${r.url || \"\"}\nSnippet: ${r.content || r.raw_content || \"\"}\n`;\n}\n\nreturn [\n  {\n    json: {\n      query: $json.query || $('Switch').first().json.query,\n      research_context: context,\n      knowledge_context: \"\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        544
+      ],
+      "id": "17c2111a-743f-4348-b603-4789f3a83fea",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  api_key: \"YOUR_TAVILY_API_KEY\",\n  query: $('Webhook1').item.json.body.message,\n  max_results: 3\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        704,
+        448
+      ],
+      "id": "e1164afe-e6f9-497d-b766-b50722400eee",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { answer: $json.content.parts[0].text } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1872,
+        512
+      ],
+      "id": "1ea6dde1-34e2-4e65-8d73-0972badaa10c",
+      "name": "Respond to Webhook1"
     }
   ],
   "pinData": {},
@@ -226,7 +351,58 @@
       "main": [
         [
           {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
             "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
             "type": "main",
             "index": 0
           }
@@ -237,9 +413,10 @@
   "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "d5d9cbfe-c506-43ce-a2e8-53a8c90c6b70",
+  "versionId": "17d7951f-3ed5-4d74-92b7-663dba250ee0",
   "meta": {
     "instanceId": "6e4d4a70212d7b7ab6369367bab99633fb9645e9d4070edee05a48c34370ae23"
   },

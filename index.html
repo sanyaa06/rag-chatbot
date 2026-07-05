@@ -3,112 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Archive — Knowledge Base Assistant</title>
+<title>Chatbot</title>
 <style>
   :root {
-    --ink: #1c1a17;
-    --paper: #f6f2e9;
-    --paper-dim: #ece5d4;
-    --rule: #d8cfb8;
-    --brass: #9c7a3c;
-    --brass-dim: #c9ad76;
-    --error: #a3402f;
-    --mono: 'IBM Plex Mono', 'Courier New', monospace;
-    --serif: 'Georgia', 'Iowan Old Style', serif;
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --ink: #12151c;
+    --ink-soft: #5b6474;
+    --border: #e3e6ec;
+    --accent: #2f5dfc;
+    --accent-dim: #e8edff;
+    --success: #1f9d55;
+    --success-bg: #e7f7ec;
+    --pending-bg: #fff6e0;
+    --pending-ink: #966b06;
+    --error: #d1453b;
+    --error-bg: #fdeceb;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif;
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    background: var(--paper);
+    background: var(--bg);
     color: var(--ink);
-    font-family: var(--mono);
+    font-family: var(--sans);
     min-height: 100vh;
-    background-image:
-      linear-gradient(var(--paper-dim) 1px, transparent 1px),
-      linear-gradient(90deg, var(--paper-dim) 1px, transparent 1px);
-    background-size: 28px 28px;
-    background-position: -1px -1px;
+    -webkit-font-smoothing: antialiased;
   }
 
   .frame {
-    max-width: 880px;
+    max-width: 860px;
     margin: 0 auto;
     padding: 48px 24px 80px;
   }
 
   header {
-    border-bottom: 1px solid var(--ink);
-    padding-bottom: 20px;
-    margin-bottom: 40px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
+    margin-bottom: 36px;
   }
 
-  .eyebrow {
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--brass);
-    margin: 0 0 6px;
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .brand-mark svg { width: 18px; height: 18px; }
 
   h1 {
-    font-family: var(--serif);
-    font-weight: 400;
-    font-size: 34px;
+    font-size: 19px;
+    font-weight: 600;
     margin: 0;
     letter-spacing: -0.01em;
   }
 
-  .status-tag {
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    text-align: right;
-    line-height: 1.6;
-    color: #6b6455;
+  .subtitle {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 1px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 20px;
   }
 
   .status-dot {
-    display: inline-block;
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--brass);
-    margin-right: 6px;
-    position: relative;
-    top: -1px;
+    background: var(--success);
   }
 
-  section {
-    margin-bottom: 44px;
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 24px;
+    overflow: hidden;
   }
 
-  .section-label {
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #6b6455;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
   }
 
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--rule);
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 2px;
   }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .card-body { padding: 20px; }
 
   /* Upload zone */
   .dropzone {
-    border: 1px dashed var(--ink);
-    background: rgba(255,255,255,0.35);
-    padding: 36px 24px;
+    border: 1.5px dashed var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    padding: 32px 20px;
     text-align: center;
     cursor: pointer;
     transition: border-color 0.15s ease, background 0.15s ease;
@@ -116,8 +137,8 @@
   }
 
   .dropzone:hover, .dropzone.drag-over {
-    border-color: var(--brass);
-    background: rgba(255,255,255,0.6);
+    border-color: var(--accent);
+    background: var(--accent-dim);
   }
 
   .dropzone input[type="file"] {
@@ -128,24 +149,33 @@
   }
 
   .dropzone-icon {
-    font-size: 22px;
-    margin-bottom: 10px;
-    color: var(--brass);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
   }
 
+  .dropzone-icon svg { width: 16px; height: 16px; }
+
   .dropzone-text {
-    font-size: 13px;
+    font-size: 13.5px;
+    font-weight: 500;
     color: var(--ink);
   }
 
   .dropzone-sub {
-    font-size: 11px;
-    color: #8a8270;
-    margin-top: 6px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 4px;
   }
 
   .file-list {
-    margin-top: 16px;
+    margin-top: 14px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -156,65 +186,60 @@
     align-items: center;
     justify-content: space-between;
     padding: 10px 14px;
-    background: #fff;
-    border: 1px solid var(--rule);
-    font-size: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12.5px;
   }
 
   .file-row .name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 60%;
+    max-width: 55%;
+    font-weight: 500;
   }
 
   .file-row .meta {
-    color: #8a8270;
-    font-size: 11px;
+    color: var(--ink-soft);
+    font-size: 11.5px;
   }
 
   .file-state {
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 2px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 3px 9px;
+    border-radius: 20px;
   }
 
-  .file-state.pending { background: #eee5cf; color: #7a6633; }
-  .file-state.uploading { background: #e2ecf0; color: #3c6b7a; }
-  .file-state.done { background: #dcead9; color: #2f6b34; }
-  .file-state.error { background: #f0dcd8; color: var(--error); }
+  .file-state.pending { background: var(--pending-bg); color: var(--pending-ink); }
+  .file-state.uploading { background: var(--accent-dim); color: var(--accent); }
+  .file-state.done { background: var(--success-bg); color: var(--success); }
+  .file-state.error { background: var(--error-bg); color: var(--error); }
 
   /* Chat */
-  .chat-shell {
-    border: 1px solid var(--ink);
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    height: 460px;
-  }
-
   .chat-log {
-    flex: 1;
+    height: 420px;
     overflow-y: auto;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
   .msg {
     max-width: 78%;
-    font-size: 13px;
+    font-size: 13.5px;
     line-height: 1.55;
   }
 
   .msg .role {
-    font-size: 10px;
-    letter-spacing: 0.1em;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: #8a8270;
+    color: var(--ink-soft);
     margin-bottom: 4px;
   }
 
@@ -224,84 +249,89 @@
   }
 
   .msg.user .bubble {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--accent);
+    color: #fff;
     padding: 10px 14px;
+    border-radius: 12px 12px 3px 12px;
     display: inline-block;
     text-align: left;
   }
 
   .msg.assistant .bubble {
-    background: var(--paper-dim);
-    border-left: 2px solid var(--brass);
+    background: var(--bg);
+    border: 1px solid var(--border);
     padding: 10px 14px;
+    border-radius: 12px 12px 12px 3px;
     display: inline-block;
   }
 
   .msg.system .bubble {
-    color: #8a8270;
-    font-style: italic;
-    font-size: 12px;
+    color: var(--ink-soft);
+    font-size: 12.5px;
   }
 
   .chat-input-row {
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--border);
     display: flex;
-    padding: 12px;
+    padding: 14px;
     gap: 10px;
   }
 
   .chat-input-row input {
     flex: 1;
-    border: 1px solid var(--rule);
-    background: var(--paper);
-    padding: 10px 12px;
-    font-family: var(--mono);
-    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    padding: 11px 14px;
+    font-family: var(--sans);
+    font-size: 13.5px;
     color: var(--ink);
   }
 
   .chat-input-row input:focus {
     outline: none;
-    border-color: var(--brass);
+    border-color: var(--accent);
+    background: var(--surface);
   }
 
   .send-btn {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--accent);
+    color: #fff;
     border: none;
-    padding: 0 20px;
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    border-radius: 8px;
+    padding: 0 22px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background 0.15s ease;
   }
 
-  .send-btn:hover { background: var(--brass); }
-  .send-btn:disabled { background: var(--rule); color: #8a8270; cursor: not-allowed; }
+  .send-btn:hover { background: #2149d1; }
+  .send-btn:disabled { background: var(--border); color: var(--ink-soft); cursor: not-allowed; }
 
   .config-note {
-    font-size: 11px;
-    color: #8a8270;
+    font-size: 11.5px;
+    color: var(--ink-soft);
     margin-top: 10px;
     line-height: 1.6;
   }
 
   .config-note code {
-    background: var(--paper-dim);
+    background: var(--bg);
+    border: 1px solid var(--border);
     padding: 1px 5px;
-    border-radius: 2px;
+    border-radius: 4px;
+    font-size: 11px;
   }
 
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--rule); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
   @media (max-width: 600px) {
-    header { flex-direction: column; align-items: flex-start; gap: 12px; }
-    .status-tag { text-align: left; }
-    h1 { font-size: 26px; }
+    header { flex-direction: column; align-items: flex-start; gap: 14px; }
+    h1 { font-size: 17px; }
   }
 </style>
 </head>
@@ -310,50 +340,66 @@
 <div class="frame">
 
   <header>
-    <div>
-      <p class="eyebrow">Internal tool</p>
-      <h1>Archive</h1>
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 5.5C4 4.67 4.67 4 5.5 4h13c.83 0 1.5.67 1.5 1.5v9c0 .83-.67 1.5-1.5 1.5H9l-4 4v-4H5.5C4.67 15 4 14.33 4 13.5v-8Z" fill="white"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Chatbot</h1>
+        <div class="subtitle">Ask questions about your uploaded documents</div>
+      </div>
     </div>
-    <div class="status-tag">
-      <span class="status-dot"></span>knowledge base assistant<br>
-      indexed via n8n
+    <div class="status-pill">
+      <span class="status-dot"></span>Connected
     </div>
   </header>
 
-  <section>
-    <div class="section-label">Add a document</div>
-    <div class="dropzone" id="dropzone">
-      <input type="file" id="fileInput" accept="application/pdf" multiple>
-      <div class="dropzone-icon">&#8593;</div>
-      <div class="dropzone-text">Drop a PDF here, or click to browse</div>
-      <div class="dropzone-sub">Files are added to the shared knowledge base and indexed automatically</div>
+  <div class="card">
+    <div class="card-header">
+      <p class="card-title">Add a document</p>
+      <p class="card-desc">Upload a PDF to add it to the knowledge base</p>
     </div>
-    <div class="file-list" id="fileList"></div>
-    <p class="config-note">Uploads post to the webhook set in <code>UPLOAD_WEBHOOK_URL</code> below.</p>
-  </section>
-
-  <section>
-    <div class="section-label">Ask the archive</div>
-    <div class="chat-shell">
-      <div class="chat-log" id="chatLog">
-        <div class="msg system">
-          <div class="bubble">Ask a question about anything in the knowledge base.</div>
+    <div class="card-body">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept="application/pdf" multiple>
+        <div class="dropzone-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 16V4M12 4L7 9M12 4L17 9M5 20H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
+        <div class="dropzone-text">Drop a PDF here, or click to browse</div>
+        <div class="dropzone-sub">Documents are indexed automatically once uploaded</div>
       </div>
-      <div class="chat-input-row">
-        <input type="text" id="chatInput" placeholder="Ask about a policy, a clause, a procedure…" autocomplete="off">
-        <button class="send-btn" id="sendBtn">Send</button>
+      <div class="file-list" id="fileList"></div>
+      <p class="config-note">Uploads are sent to the webhook set in <code>UPLOAD_WEBHOOK_URL</code>.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <p class="card-title">Ask a question</p>
+      <p class="card-desc">Answers are drawn from your documents, with a live web search as a fallback</p>
+    </div>
+    <div class="chat-log" id="chatLog">
+      <div class="msg system">
+        <div class="bubble">Ask a question to get started.</div>
       </div>
     </div>
-    <p class="config-note">Chat calls the webhook set in <code>CHAT_WEBHOOK_URL</code> below.</p>
-  </section>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Type your question…" autocomplete="off">
+      <button class="send-btn" id="sendBtn">Send</button>
+    </div>
+  </div>
+  <p class="config-note" style="margin-top: -14px;">Chat is sent to the webhook set in <code>CHAT_WEBHOOK_URL</code>.</p>
 
 </div>
 
 <script>
   // ---- Configuration: paste your n8n Webhook Production URLs here ----
-  const UPLOAD_WEBHOOK_URL = "https://sansaidwhattt.app.n8n.cloud/webhook/chat-path";
-  const CHAT_WEBHOOK_URL   = "https://sansaidwhattt.app.n8n.cloud/webhook/upload-pdf";
+  const UPLOAD_WEBHOOK_URL = "https://sansaidwhattt.app.n8n.cloud/webhook/upload-pdf";
+  const CHAT_WEBHOOK_URL   = "https://sansaidwhattt.app.n8n.cloud/webhook/chat-path";
   // ----------------------------------------------------------------------
 
   const dropzone = document.getElementById('dropzone');
@@ -445,7 +491,7 @@
   function addMessage(role, text) {
     const msg = document.createElement('div');
     msg.className = 'msg ' + role;
-    const roleLabel = role === 'user' ? 'You' : role === 'assistant' ? 'Archive' : '';
+    const roleLabel = role === 'user' ? 'You' : role === 'assistant' ? 'Assistant' : '';
     msg.innerHTML = `
       ${roleLabel ? `<div class="role">${roleLabel}</div>` : ''}
       <div class="bubble">${text}</div>
